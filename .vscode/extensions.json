@@ -1,0 +1,12 @@
+{
+    "recommendations": [
+        "masterustacean.cargo-runner",
+        "masterustacean.leptos-fmt",
+        "vadimcn.vscode-lldb",
+        "fill-labs.dependi",
+        "usernamehw.errorlens",
+        "tamasfe.even-better-toml",
+        "rust-lang.rust-analyzer",
+        "tauri-apps.tauri-vscode"
+    ]
+}

@@ -1,0 +1,4 @@
+# .genignore
+src-tauri/icons/*
+public/favicon.ico
+README.md
