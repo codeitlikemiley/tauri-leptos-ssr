@@ -17,9 +17,9 @@ cargo install --locked cargo-leptos
 
 ```sh
 # you will be prompted to enter project name
-cargo generate --git git@github.com:codeitlikemiley/tauri-leptos-ssr
+cargo generate --git https://github.com/codeitlikemiley/tauri-leptos-ssr.git
 # or with cargo leptos
-cargo leptos new --git git@github.com:codeitlikemiley/tauri-leptos-ssr
+cargo leptos new --git https://github.com/codeitlikemiley/tauri-leptos-ssr.git
 
 # example output:
 # you will be prompted for project name
