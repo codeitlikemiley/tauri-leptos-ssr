@@ -51,34 +51,34 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Scaffold test app
-        run: cargo generate --path . --name test-app --silent
+        run: cargo generate --path . --destination ${{ runner.temp }} --name test-app --silent
 
       - name: Check formatting
-        working-directory: test-app
+        working-directory: ${{ runner.temp }}/test-app
         run: cargo fmt --all -- --check
 
       - name: Create resource dirs for Tauri build script
-        working-directory: test-app
+        working-directory: ${{ runner.temp }}/test-app
         run: mkdir -p target/site/pkg
 
       - name: Check workspace (native)
-        working-directory: test-app
+        working-directory: ${{ runner.temp }}/test-app
         run: cargo check --workspace --exclude frontend
 
       - name: Check frontend (wasm)
-        working-directory: test-app
+        working-directory: ${{ runner.temp }}/test-app
         run: cargo check --package frontend --target wasm32-unknown-unknown
 
       - name: Clippy (native crates)
-        working-directory: test-app
+        working-directory: ${{ runner.temp }}/test-app
         run: cargo clippy --workspace --exclude frontend -- -D warnings
 
       - name: Clippy (frontend wasm)
-        working-directory: test-app
+        working-directory: ${{ runner.temp }}/test-app
         run: cargo clippy --package frontend --target wasm32-unknown-unknown -- -D warnings
 
       - name: Build with cargo-leptos
-        working-directory: test-app
+        working-directory: ${{ runner.temp }}/test-app
         run: cargo leptos build --release
 
   tauri-build:
@@ -132,10 +132,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Scaffold test app
-        run: cargo generate --path . --name test-app --silent
+        run: cargo generate --path . --destination ${{ runner.temp }} --name test-app --silent
 
       - name: Build Tauri app
-        working-directory: test-app
+        working-directory: ${{ runner.temp }}/test-app
         run: cargo tauri build
         env:
           TAURI_SIGNING_PRIVATE_KEY: ""
