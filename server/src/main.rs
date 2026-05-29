@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use leptos::logging::log;
+use leptos::prelude::*;
 
 #[tokio::main]
 async fn main() {

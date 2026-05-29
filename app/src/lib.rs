@@ -57,10 +57,7 @@ fn HomePage() -> impl IntoView {
     let (optimistic_count, set_optimistic_count) = signal(None::<u32>);
 
     // Server count resource
-    let count = Resource::new(
-        move || increment_action.version().get(),
-        |_| get_count(),
-    );
+    let count = Resource::new(move || increment_action.version().get(), |_| get_count());
 
     // Initialize from localStorage or server
     Effect::new(move |_| {
@@ -70,12 +67,8 @@ fn HomePage() -> impl IntoView {
             {
                 if let Some(window) = window() {
                     if let Ok(Some(storage)) = window.local_storage() {
-                        if let Ok(Some(cached_count_str)) =
-                            storage.get_item("spin_counter_count")
-                        {
-                            if let Ok(cached_count) =
-                                cached_count_str.parse::<u32>()
-                            {
+                        if let Ok(Some(cached_count_str)) = storage.get_item("spin_counter_count") {
+                            if let Ok(cached_count) = cached_count_str.parse::<u32>() {
                                 set_optimistic_count.set(Some(cached_count));
                                 return;
                             }
@@ -93,10 +86,8 @@ fn HomePage() -> impl IntoView {
                 {
                     if let Some(window) = window() {
                         if let Ok(Some(storage)) = window.local_storage() {
-                            let _ = storage.set_item(
-                                "spin_counter_count",
-                                &server_count.to_string(),
-                            );
+                            let _ =
+                                storage.set_item("spin_counter_count", &server_count.to_string());
                         }
                     }
                 }
@@ -119,10 +110,7 @@ fn HomePage() -> impl IntoView {
             {
                 if let Some(window) = window() {
                     if let Ok(Some(storage)) = window.local_storage() {
-                        let _ = storage.set_item(
-                            "spin_counter_count",
-                            &server_count.to_string(),
-                        );
+                        let _ = storage.set_item("spin_counter_count", &server_count.to_string());
                     }
                 }
             }
@@ -140,8 +128,7 @@ fn HomePage() -> impl IntoView {
         {
             if let Some(window) = window() {
                 if let Ok(Some(storage)) = window.local_storage() {
-                    let _ = storage
-                        .set_item("spin_counter_count", &new_count.to_string());
+                    let _ = storage.set_item("spin_counter_count", &new_count.to_string());
                 }
             }
         }
@@ -248,18 +235,24 @@ mod storage {
     #[cfg(feature = "spin")]
     pub async fn get(key: &str) -> Result<Option<Vec<u8>>, String> {
         use spin_sdk::key_value::Store;
-        let store = Store::open_default().await
+        let store = Store::open_default()
+            .await
             .map_err(|e| format!("Failed to open Spin KV store: {}", e))?;
-        store.get(key).await
+        store
+            .get(key)
+            .await
             .map_err(|e| format!("Failed to get from Spin KV: {}", e))
     }
 
     #[cfg(feature = "spin")]
     pub async fn set(key: &str, value: &[u8]) -> Result<(), String> {
         use spin_sdk::key_value::Store;
-        let store = Store::open_default().await
+        let store = Store::open_default()
+            .await
             .map_err(|e| format!("Failed to open Spin KV store: {}", e))?;
-        store.set(key, value).await
+        store
+            .set(key, value)
+            .await
             .map_err(|e| format!("Failed to set in Spin KV: {}", e))
     }
 
@@ -294,8 +287,7 @@ mod storage {
         }
 
         let file_path = format!("{}/{}.txt", base_path, key);
-        fs::write(&file_path, value)
-            .map_err(|e| format!("Failed to write file: {}", e))
+        fs::write(&file_path, value).map_err(|e| format!("Failed to write file: {}", e))
     }
 }
 
@@ -323,7 +315,9 @@ pub async fn get_count() -> Result<u32, ServerFnError<String>> {
     }
     #[cfg(not(feature = "ssr"))]
     {
-        Err(ServerFnError::ServerError("Server-only function".to_string()))
+        Err(ServerFnError::ServerError(
+            "Server-only function".to_string(),
+        ))
     }
 }
 
@@ -335,14 +329,17 @@ pub async fn increment_count() -> Result<(), ServerFnError<String>> {
         let new_count = current_count + 1;
         println!("Incrementing count from {current_count} to {new_count}");
 
-        storage::set("counter", new_count.to_string().as_bytes()).await
+        storage::set("counter", new_count.to_string().as_bytes())
+            .await
             .map_err(|e| ServerFnError::ServerError(e))?;
 
         Ok(())
     }
     #[cfg(not(feature = "ssr"))]
     {
-        Err(ServerFnError::ServerError("Server-only function".to_string()))
+        Err(ServerFnError::ServerError(
+            "Server-only function".to_string(),
+        ))
     }
 }
 
@@ -357,9 +354,9 @@ pub fn build_router(leptos_options: LeptosOptions) -> axum::Router {
     let cors = CorsLayer::new()
         .allow_origin(AllowOrigin::predicate(|origin, _parts| {
             let origin_bytes = origin.as_bytes();
-            origin_bytes == b"tauri://localhost" ||
-            origin_bytes.starts_with(b"http://localhost:") ||
-            origin_bytes.starts_with(b"http://127.0.0.1:")
+            origin_bytes == b"tauri://localhost"
+                || origin_bytes.starts_with(b"http://localhost:")
+                || origin_bytes.starts_with(b"http://127.0.0.1:")
         }))
         .allow_methods([axum::http::Method::GET, axum::http::Method::POST])
         .allow_headers([axum::http::header::CONTENT_TYPE]);

@@ -14,34 +14,51 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .setup(|app| {
             use tauri::Manager;
-            let app_data_dir = app.path().app_local_data_dir()
-                .map_err(|e| Box::<dyn std::error::Error>::from(format!("Failed to get app local data directory: {}", e)))?;
+            let app_data_dir = app.path().app_local_data_dir().map_err(|e| {
+                Box::<dyn std::error::Error>::from(format!(
+                    "Failed to get app local data directory: {}",
+                    e
+                ))
+            })?;
             if !app_data_dir.exists() {
-                std::fs::create_dir_all(&app_data_dir)
-                    .map_err(|e| Box::<dyn std::error::Error>::from(format!("Failed to create app local data directory: {}", e)))?;
+                std::fs::create_dir_all(&app_data_dir).map_err(|e| {
+                    Box::<dyn std::error::Error>::from(format!(
+                        "Failed to create app local data directory: {}",
+                        e
+                    ))
+                })?;
             }
             std::env::set_var("STORAGE_PATH", app_data_dir.to_string_lossy().to_string());
 
             #[cfg(not(debug_assertions))]
             {
-                use tauri::{Manager, Url};
                 use leptos::prelude::get_configuration;
+                use tauri::{Manager, Url};
 
                 if std::env::var("LEPTOS_OUTPUT_NAME").is_err() {
                     std::env::set_var("LEPTOS_OUTPUT_NAME", "app");
                 }
 
-                let resource_dir = app.path().resource_dir()
-                    .map_err(|e| Box::<dyn std::error::Error>::from(format!("Failed to get resource directory: {}", e)))?;
+                let resource_dir = app.path().resource_dir().map_err(|e| {
+                    Box::<dyn std::error::Error>::from(format!(
+                        "Failed to get resource directory: {}",
+                        e
+                    ))
+                })?;
                 let site_root = resource_dir.join("site");
                 let cargo_toml_path = resource_dir.join("Cargo.toml");
 
                 std::env::set_var("LEPTOS_SITE_ROOT", site_root.to_string_lossy().to_string());
 
-                let cargo_toml_str = cargo_toml_path.to_str()
-                    .ok_or_else(|| Box::<dyn std::error::Error>::from("Cargo.toml path is not valid UTF-8"))?;
-                let mut conf = get_configuration(Some(cargo_toml_str))
-                    .map_err(|e| Box::<dyn std::error::Error>::from(format!("Failed to load leptos configuration: {}", e)))?;
+                let cargo_toml_str = cargo_toml_path.to_str().ok_or_else(|| {
+                    Box::<dyn std::error::Error>::from("Cargo.toml path is not valid UTF-8")
+                })?;
+                let mut conf = get_configuration(Some(cargo_toml_str)).map_err(|e| {
+                    Box::<dyn std::error::Error>::from(format!(
+                        "Failed to load leptos configuration: {}",
+                        e
+                    ))
+                })?;
                 conf.leptos_options.site_root = site_root.to_string_lossy().to_string().into();
 
                 let router = app::build_router(conf.leptos_options);
@@ -49,11 +66,24 @@ pub fn run() {
                 let (port, listener) = tauri::async_runtime::block_on(async {
                     let listener = match tokio::net::TcpListener::bind("127.0.0.1:0").await {
                         Ok(l) => l,
-                        Err(_) => tokio::net::TcpListener::bind("[::1]:0").await
-                            .map_err(|e| Box::<dyn std::error::Error>::from(format!("Failed to bind tcp listener: {}", e)))?,
+                        Err(_) => tokio::net::TcpListener::bind("[::1]:0")
+                            .await
+                            .map_err(|e| {
+                                Box::<dyn std::error::Error>::from(format!(
+                                    "Failed to bind tcp listener: {}",
+                                    e
+                                ))
+                            })?,
                     };
-                    let port = listener.local_addr()
-                        .map_err(|e| Box::<dyn std::error::Error>::from(format!("Failed to get local addr: {}", e)))?.port();
+                    let port = listener
+                        .local_addr()
+                        .map_err(|e| {
+                            Box::<dyn std::error::Error>::from(format!(
+                                "Failed to get local addr: {}",
+                                e
+                            ))
+                        })?
+                        .port();
                     Ok::<_, Box<dyn std::error::Error>>((port, listener))
                 })?;
 
@@ -73,12 +103,15 @@ pub fn run() {
                     }
                 });
 
-                let window = app.get_webview_window("main")
-                    .ok_or_else(|| Box::<dyn std::error::Error>::from("Failed to get main window"))?;
-                let url = Url::parse(&format!("http://127.0.0.1:{}", port))
-                    .map_err(|e| Box::<dyn std::error::Error>::from(format!("Failed to parse URL: {}", e)))?;
-                window.navigate(url)
-                    .map_err(|e| Box::<dyn std::error::Error>::from(format!("Failed to navigate window: {}", e)))?;
+                let window = app.get_webview_window("main").ok_or_else(|| {
+                    Box::<dyn std::error::Error>::from("Failed to get main window")
+                })?;
+                let url = Url::parse(&format!("http://127.0.0.1:{}", port)).map_err(|e| {
+                    Box::<dyn std::error::Error>::from(format!("Failed to parse URL: {}", e))
+                })?;
+                window.navigate(url).map_err(|e| {
+                    Box::<dyn std::error::Error>::from(format!("Failed to navigate window: {}", e))
+                })?;
             }
             let _ = app;
             Ok(())
