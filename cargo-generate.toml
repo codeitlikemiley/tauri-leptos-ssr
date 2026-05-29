@@ -8,4 +8,6 @@ exclude = [
     "end2end/node_modules/**",
     "end2end/playwright/.cache/**",
     "README.md",
+    "src-tauri/icons/**",
+    "public/favicon.ico",
 ]
