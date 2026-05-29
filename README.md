@@ -82,7 +82,7 @@ This runs `cargo leptos build --release` (via `beforeBuildCommand`), bundles the
 
 ### Release Mode (`cargo tauri build`)
 
-1. `beforeBuildCommand` runs `build-binaries.sh` → `cargo leptos build --release`
+1. `beforeBuildCommand` runs `cargo leptos build --release`
 2. Produces `target/site/` with WASM, JS, CSS, and static assets
 3. Tauri bundles `target/site/` + `Cargo.toml` as resources
 4. At runtime, `src-tauri/src/lib.rs`:

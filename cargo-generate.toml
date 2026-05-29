@@ -9,15 +9,3 @@ exclude = [
     "end2end/playwright/.cache/**",
     "README.md",
 ]
-
-[placeholders.operating_system]
-type = "string"
-prompt = "Operating system (windows/linux/macos)"
-choices = ["windows", "linux/macos"]
-default = "linux/macos"
-
-[conditional.'operating_system == "windows"']
-build_script = ".\\build-binaries.ps1"
-
-[conditional.'operating_system == "linux/macos"']
-build_script = "./build-binaries.sh"
