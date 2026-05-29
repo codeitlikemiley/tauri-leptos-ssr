@@ -40,6 +40,9 @@ jobs:
       - name: Install cargo-leptos
         run: cargo install --locked cargo-leptos
 
+      - name: Create resource dirs for Tauri build script
+        run: mkdir -p target/site/pkg
+
       - name: Check workspace (native)
         run: cargo check --workspace --exclude frontend
 
@@ -86,6 +89,9 @@ jobs:
 
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
+
+      - name: Create resource dirs for Tauri build script
+        run: mkdir -p target/site/pkg
 
       - name: Clippy (native crates)
         run: cargo clippy --workspace --exclude frontend -- -D warnings

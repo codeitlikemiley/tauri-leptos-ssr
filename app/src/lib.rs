@@ -331,7 +331,7 @@ pub async fn increment_count() -> Result<(), ServerFnError<String>> {
 
         storage::set("counter", new_count.to_string().as_bytes())
             .await
-            .map_err(|e| ServerFnError::ServerError(e))?;
+            .map_err(ServerFnError::ServerError)?;
 
         Ok(())
     }
