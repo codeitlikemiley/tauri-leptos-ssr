@@ -116,8 +116,8 @@ pub fn run() {
             let _ = app;
             Ok(())
         })
-        .on_window_event(|window, event| match event {
-            tauri::WindowEvent::CloseRequested { .. } => {
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
                 println!("Window close requested, cleaning up...");
                 use tauri::Manager;
                 if let Some(task) = window.try_state::<ServerTask>() {
@@ -125,7 +125,6 @@ pub fn run() {
                     println!("Axum server task aborted successfully.");
                 }
             }
-            _ => {}
         })
         .invoke_handler(tauri::generate_handler![])
         .run(tauri::generate_context!())

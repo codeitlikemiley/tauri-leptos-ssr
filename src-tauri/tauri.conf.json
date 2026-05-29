@@ -7,7 +7,7 @@
     "frontendDist": "../target/site",
     "devUrl": "http://localhost:3000",
     "beforeDevCommand": "cd .. && cargo leptos watch",
-    "beforeBuildCommand": "cargo leptos build --release"
+    "beforeBuildCommand": "cd .. && cargo leptos build --release"
   },
   "app": {
     "windows": [

@@ -59,6 +59,10 @@ jobs:
       - name: Install cargo-binstall
         uses: cargo-bins/cargo-binstall@main
 
+      - name: Add cargo bin to PATH
+        shell: bash
+        run: echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
+
       - name: Install cargo-leptos
         run: cargo binstall -y cargo-leptos
         env:
@@ -107,6 +111,10 @@ jobs:
 
       - name: Install cargo-binstall
         uses: cargo-bins/cargo-binstall@main
+
+      - name: Add cargo bin to PATH
+        shell: bash
+        run: echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
 
       - name: Install cargo-leptos and tauri-cli
         run: cargo binstall -y cargo-leptos tauri-cli
