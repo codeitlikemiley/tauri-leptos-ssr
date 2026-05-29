@@ -1,7 +1,7 @@
 [package]
-name = "{{ project-name | snake_case }}"
+name = "tauri_leptos_ssr"
 version = "0.1.0"
-authors = ["{{authors | default: 'Your Name <your.email@example.com>'}}"]
+authors = ["Your Name <your.email@example.com>"]
 license = "MIT"
 edition = "2021"
 
@@ -22,3 +22,7 @@ tauri = { version = "2.5.0", features = [] }
 tauri-plugin-log = "2.4.0"
 tauri-plugin-shell = "2.2.1"
 tauri-plugin-process = "2.2.1"
+app = { path = "../app", default-features = false, features = ["ssr"] }
+leptos = { workspace = true, features = ["ssr"] }
+axum = { workspace = true }
+tokio = { workspace = true }
