@@ -38,24 +38,6 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Check formatting
-        run: cargo fmt --all -- --check
-
-      - name: Create resource dirs for Tauri build script
-        run: mkdir -p target/site/pkg
-
-      - name: Check workspace (native)
-        run: cargo check --workspace --exclude frontend
-
-      - name: Check frontend (wasm)
-        run: cargo check --package frontend --target wasm32-unknown-unknown
-
-      - name: Clippy (native crates)
-        run: cargo clippy --workspace --exclude frontend -- -D warnings
-
-      - name: Clippy (frontend wasm)
-        run: cargo clippy --package frontend --target wasm32-unknown-unknown -- -D warnings
-
       - name: Install cargo-binstall
         uses: cargo-bins/cargo-binstall@main
 
@@ -63,12 +45,40 @@ jobs:
         shell: bash
         run: echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
 
-      - name: Install cargo-leptos
-        run: cargo binstall -y --force cargo-leptos
+      - name: Install cargo-generate and cargo-leptos
+        run: cargo binstall -y --force cargo-generate cargo-leptos
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Scaffold test app
+        run: cargo generate --path . --name test-app --silent
+
+      - name: Check formatting
+        working-directory: test-app
+        run: cargo fmt --all -- --check
+
+      - name: Create resource dirs for Tauri build script
+        working-directory: test-app
+        run: mkdir -p target/site/pkg
+
+      - name: Check workspace (native)
+        working-directory: test-app
+        run: cargo check --workspace --exclude frontend
+
+      - name: Check frontend (wasm)
+        working-directory: test-app
+        run: cargo check --package frontend --target wasm32-unknown-unknown
+
+      - name: Clippy (native crates)
+        working-directory: test-app
+        run: cargo clippy --workspace --exclude frontend -- -D warnings
+
+      - name: Clippy (frontend wasm)
+        working-directory: test-app
+        run: cargo clippy --package frontend --target wasm32-unknown-unknown -- -D warnings
+
       - name: Build with cargo-leptos
+        working-directory: test-app
         run: cargo leptos build --release
 
   tauri-build:
@@ -116,12 +126,16 @@ jobs:
         shell: bash
         run: echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
 
-      - name: Install cargo-leptos and tauri-cli
-        run: cargo binstall -y --force cargo-leptos tauri-cli
+      - name: Install build tools
+        run: cargo binstall -y --force cargo-generate cargo-leptos tauri-cli
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Scaffold test app
+        run: cargo generate --path . --name test-app --silent
+
       - name: Build Tauri app
+        working-directory: test-app
         run: cargo tauri build
         env:
           TAURI_SIGNING_PRIVATE_KEY: ""
