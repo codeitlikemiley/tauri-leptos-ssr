@@ -10,8 +10,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  check:
-    name: Check & Build
+  validate:
+    name: Check, Format & Clippy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,6 +20,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
+          components: rustfmt, clippy
 
       - name: Install system dependencies (Tauri)
         run: |
@@ -37,11 +38,8 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Install cargo-binstall
-        uses: cargo-bins/cargo-binstall@main
-
-      - name: Install cargo-leptos
-        run: cargo binstall -y cargo-leptos
+      - name: Check formatting
+        run: cargo fmt --all -- --check
 
       - name: Create resource dirs for Tauri build script
         run: mkdir -p target/site/pkg
@@ -52,55 +50,20 @@ jobs:
       - name: Check frontend (wasm)
         run: cargo check --package frontend --target wasm32-unknown-unknown
 
-      - name: Build with cargo-leptos
-        run: cargo leptos build --release
-
-  fmt:
-    name: Formatting
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt
-      - run: cargo fmt --all -- --check
-
-  clippy:
-    name: Clippy
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
-          targets: wasm32-unknown-unknown
-
-      - name: Install system dependencies (Tauri)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            libappindicator3-dev \
-            librsvg2-dev \
-            patchelf \
-            libssl-dev \
-            libgtk-3-dev \
-            libsoup-3.0-dev \
-            libjavascriptcoregtk-4.1-dev
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-
-      - name: Create resource dirs for Tauri build script
-        run: mkdir -p target/site/pkg
-
       - name: Clippy (native crates)
         run: cargo clippy --workspace --exclude frontend -- -D warnings
 
       - name: Clippy (frontend wasm)
         run: cargo clippy --package frontend --target wasm32-unknown-unknown -- -D warnings
+
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install cargo-leptos
+        run: cargo binstall -y cargo-leptos
+
+      - name: Build with cargo-leptos
+        run: cargo leptos build --release
 
   tauri-build:
     name: Tauri Build (${{ matrix.os }})
