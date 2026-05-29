@@ -35,7 +35,7 @@ pub fn App() -> impl IntoView {
         <Stylesheet id="leptos" href="/pkg/app.css" />
 
         // sets the document title
-        <Title text="Welcome to Tauri Leptos SSR" />
+        <Title text="Welcome to {{ project-name | title_case }}" />
 
         // content for this welcome page
         <Router>
@@ -149,7 +149,7 @@ fn HomePage() -> impl IntoView {
                                 <span class="text-[#1a2332] font-bold text-xl">C</span>
                             </div>
                             <h1 class="text-3xl md:text-4xl font-medium text-white">
-                                "spin-counter"
+                                "{{ project-name | title_case }}"
                             </h1>
                         </div>
                         <p class="text-[#8b9cb8] text-sm">

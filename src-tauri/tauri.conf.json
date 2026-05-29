@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "tauri-leptos-ssr",
+  "productName": "{{ project-name }}",
   "version": "0.1.0",
-  "identifier": "com.tauri-leptos-ssr.dev",
+  "identifier": "com.{{ project-name| snake_case }}.dev",
   "build": {
     "frontendDist": "../target/site",
     "devUrl": "http://localhost:3000",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Tauri Leptos SSR App",
+        "title": "{{ project-name | title_case }} App",
         "width": 800,
         "height": 600,
         "resizable": true,
