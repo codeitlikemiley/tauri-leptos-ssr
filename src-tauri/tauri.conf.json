@@ -2,7 +2,7 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "{{ project-name }}",
   "version": "0.1.0",
-  "identifier": "com.{{ project-name| snake_case }}.dev",
+  "identifier": "com.{{ project-name | kebab_case }}.dev",
   "build": {
     "frontendDist": "../target/site",
     "devUrl": "http://localhost:3000",
