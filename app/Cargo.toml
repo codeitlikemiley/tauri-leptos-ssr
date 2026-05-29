@@ -12,6 +12,10 @@ leptos.workspace = true
 leptos_meta.workspace = true
 leptos_router.workspace = true
 leptos_axum = { workspace = true, optional = true }
+spin-sdk = { version = "6.0.0", optional = true }
+axum = { workspace = true, optional = true }
+tower-http = { workspace = true, optional = true }
+web-sys = { version = "0.3.80", features = ["Storage", "Window"], optional = true }
 
 http.workspace = true
 cfg-if.workspace = true
@@ -19,5 +23,6 @@ thiserror.workspace = true
 
 [features]
 default = []
-hydrate = ["leptos/hydrate"]
-ssr = ["leptos/ssr", "leptos_meta/ssr", "leptos_router/ssr", "dep:leptos_axum"]
+hydrate = ["leptos/hydrate", "dep:web-sys"]
+ssr = ["leptos/ssr", "leptos_meta/ssr", "leptos_router/ssr", "dep:leptos_axum", "dep:axum", "dep:tower-http"]
+spin = ["dep:spin-sdk"]

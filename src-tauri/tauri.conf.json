@@ -2,12 +2,12 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "{{ project-name }}",
   "version": "0.1.0",
-  "identifier": "com.{{ project-name| snake_case }}.dev",
+  "identifier": "com.{{ project-name | kebab_case }}.dev",
   "build": {
     "frontendDist": "../target/site",
     "devUrl": "http://localhost:3000",
     "beforeDevCommand": "cd .. && cargo leptos watch",
-    {% if operating_system == "windows" %}"beforeBuildCommand": "cd .. && .\\build-binaries.ps1"{% else %}"beforeBuildCommand": "cd .. && ./build-binaries.sh"{% endif %}
+    "beforeBuildCommand": "cd .. && cargo leptos build --release"
   },
   "app": {
     "windows": [
@@ -37,9 +37,6 @@
       "../target/site": "site/",
       "../target/site/pkg": "site/pkg/",
       "../Cargo.toml": "./"
-    },
-    "externalBin": [
-      "../target/release/server"
-    ]
+    }
   }
 }

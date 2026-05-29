@@ -1,105 +1,106 @@
-# {{ project-name | title_case}} App
+# {{ project-name | title_case }} — Tauri + Leptos SSR (In-Process)
 
-This uses leptos ssr embedded as external binary (sidecar) on tauri.
+A Tauri v2 desktop application with full **Leptos server-side rendering** — no external sidecar binary required.
+
+In production, the Axum SSR server runs as a Tokio task **inside** the Tauri process on a dynamically allocated port. The WebView navigates to the in-process server, giving you true SSR with server functions while shipping a **single native binary**.
+
+## Features
+
+- **In-Process SSR** — Leptos renders pages server-side within the Tauri process
+- **Server Functions** — `#[server]` functions execute in-process (no IPC overhead)
+- **Single Binary** — no sidecar, no companion process to manage
+- **Dynamic Port** — binds to `127.0.0.1:0` for conflict-free port allocation
+- **Tailwind CSS 4** — styling via `@import "tailwindcss"` in `style/input.css`
+- **Dual-Target App** — the `app` crate supports both Tauri (filesystem storage) and Spin (KV store) via feature flags
+
+## Prerequisites
+
+- [Rust](https://www.rust-lang.org/tools/install) (stable)
+- [cargo-leptos](https://github.com/leptos-rs/cargo-leptos): `cargo install --locked cargo-leptos`
+- [Tauri CLI](https://v2.tauri.app/start/create-project/): `cargo install tauri-cli`
 
 ## Getting Started
 
-1. Clone The Repo
+### Clone the Repo
 
 ```sh
-# you will be prompted to enter project name
 git clone git@github.com:{{ username | kebab_case }}/{{ project-name }}
 
 cd {{ project-name }}
 ```
 
-2. Generate Tauri Icons
+### Generate Tauri Icons
 
-Note: Without Icons you will have issue with running cargo tauri `{dev | build}`
+Without icons you will have issues with `cargo tauri dev` or `cargo tauri build`.
 
 ```sh
-# assuming your are on the workspace root directory
 cd src-tauri
 cargo tauri icon /path/to/icon.png
 ```
 
-3. Run Build Script
-
-Note: this is required at least to be run once since during tauri compilation it would look for the `server` binary listed on your [tauri.conf.json](./src-tauri/tauri-conf.json)
-
-```json
- "externalBin": [
-      "../target/release/server"
-    ]
-```
-
-During the First Run of `cargo tauri dev` , your `target/release/server` is not found
-
-but if your running `cargo tauri build` that would be generated as the script `build-binaries.sh` would be run
-
-
-- Linux / MacOS
-
-```sh
-# if the script isnt executable yet then run
-chmod +x ./build-binaries.sh
-# Run the script
-./build-binaries.sh
-```
-
-- Windows
-
-```powershell
-.\build-binaries.ps1
-```
-
-4. Development
+### Development
 
 ```sh
 cargo tauri dev
 ```
 
-5. Production Build
+This starts `cargo leptos watch` (via `beforeDevCommand`) which runs the standalone `server` binary for hot-reloading, and opens the Tauri WebView pointed at `http://localhost:3000`.
+
+### Production Build
 
 ```sh
 cargo tauri build
 ```
 
+This runs `cargo leptos build --release` (via `beforeBuildCommand`), bundles the site assets as Tauri resources, and compiles everything into a single native binary with the Axum SSR server embedded.
 
 ## Project Structure
 
-```sh
-- app # where you add your UI, components and routes
-- server # Leptos SSR (sidecar)
-- src-tauri # add all your tauri good stuff here and commands
-- style # tailwind stuff
+```
+├── app/              # Shared Leptos application (components, routes, server functions)
+│   └── src/lib.rs    # App component, server fns, build_router(), storage abstraction
+├── frontend/         # WASM client target (hydration entry point)
+├── server/           # Standalone Axum server (used in dev mode by cargo-leptos)
+├── src-tauri/        # Tauri desktop wrapper
+│   ├── src/lib.rs    # In-process Axum server setup, lifecycle management
+│   └── tauri.conf.json
+├── style/            # Tailwind CSS input
+├── public/           # Static assets
+└── Cargo.toml        # Workspace config + cargo-leptos metadata
 ```
 
-If you need to run sidecar app process (LEPTOS SSR SERVER) on different port please check [sidecar.rs](./src-tauri/src/sidecar.rs) and update `leptos_address` and `leptos_reload_port`
+## How It Works
 
-## Testing Your Project
+### Dev Mode (`cargo tauri dev`)
 
-Install dependencies
+1. `beforeDevCommand` runs `cargo leptos watch` → starts the standalone `server` binary on `:3000`
+2. Tauri WebView loads `devUrl: http://localhost:3000`
+3. Hot-reload works via cargo-leptos watch
 
-Note: add this to your shell configuration file:
+### Release Mode (`cargo tauri build`)
 
-- Linux/macOS: .bashrc, .zshrc
+1. `beforeBuildCommand` runs `cargo leptos build --release`
+2. Produces `target/site/` with WASM, JS, CSS, and static assets
+3. Tauri bundles `target/site/` + `Cargo.toml` as resources
+4. At runtime, `src-tauri/src/lib.rs`:
+   - Reads Leptos config from the bundled `Cargo.toml`
+   - Spawns Axum server as a **Tokio task** on `127.0.0.1:0` (OS-assigned port)
+   - Waits for the server to become ready
+   - Navigates the WebView to `http://127.0.0.1:{port}`
+5. Server functions (`get_count`, `increment_count`) execute in the same process
+6. On window close, the Axum task is gracefully aborted
 
-```sh
-# Linux/MacOS
-export PLAYWRIGHT_BROWSER_PATH=0
-```
+## Feature Flags
 
-- Windows: PowerShell profile (typically C:\Users\<username>\Documents\PowerShell\Microsoft.PowerShell_profile.ps1)
+| Crate | Feature | Purpose |
+|-------|---------|---------|
+| `app` | `hydrate` | Client-side hydration (compiled to WASM) |
+| `app` | `ssr` | Server-side rendering (compiled to native) |
+| `app` | `spin` | Spin KV storage backend (for Fermyon Cloud) |
 
-```powershell
-# edit profile
-code $PROFILE
-# Windows PowerShell
-$env:PLAYWRIGHT_BROWSER_PATH=0
-```
+## Testing
 
-This will ensure that artifacts like `Chromium`, `ffmpeg` , `webkit`, and `firefox` is scoped under `node_modules/playwright-core/.local-browsers/` instead of global cache directories on Linux/Windows or `$HOME/Library/Caches/ms-playwright/` on macOS
+### Setup
 
 ```sh
 cd end2end
@@ -107,23 +108,24 @@ npm install
 npx playwright install
 ```
 
-Cargo-leptos uses [Playwright](https://playwright.dev) as the end-to-end test tool. 
+### Run Tests
 
-Prior to the first run of the end-to-end tests run Playwright must be installed. 
-In the project's `end2end` directory run `npm install -D playwright @playwright/test` to install playwright and browser specific APIs.
-
-To run the tests during development in the project root run:
-```bash
-# back to project root directory
+```sh
+# During development
 cargo leptos end-to-end
-```
 
-To run tests for release in the project root run:
-```bash
+# For release
 cargo leptos end-to-end --release
 ```
-There are some examples tests are located in `end2end/tests` directory that pass tests with the sample Leptos app.
 
-A web-based report on tests is available by running `npx playwright show-report` in the `end2end` directory.
+View test report:
+```sh
+cd end2end
+npx playwright show-report
+```
 
-For Tauri Test using Web Driver [check this out](https://v2.tauri.app/develop/tests/webdriver/)
+For Tauri WebDriver testing, see the [Tauri docs](https://v2.tauri.app/develop/tests/webdriver/).
+
+## Licensing
+
+This template is released under the MIT License. Replace the LICENSE file with your own if you plan to release publicly.
