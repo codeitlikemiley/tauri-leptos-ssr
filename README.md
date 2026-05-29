@@ -1,44 +1,31 @@
-# Tauri + Leptos SSR (In-Process)
+# Tauri + Leptos SSR
 
-A Tauri v2 desktop application with full **Leptos server-side rendering** — no external sidecar binary required.
+A [cargo-generate](https://cargo-generate.github.io/cargo-generate/) template for building **Tauri v2** desktop apps with full **Leptos server-side rendering**.
 
-In production, the Axum SSR server runs as a Tokio task **inside** the Tauri process on a dynamically allocated port. The WebView navigates to the in-process server, giving you true SSR with server functions while shipping a **single native binary**.
+The Axum SSR server runs as a Tokio task inside the Tauri process on a dynamically allocated port. The WebView navigates to the embedded server, giving you true SSR with server functions while shipping a **single native binary**.
 
 ## Features
 
-- **In-Process SSR** — Leptos renders pages server-side within the Tauri process
-- **Server Functions** — `#[server]` functions execute in-process (no IPC overhead)
-- **Single Binary** — no sidecar, no companion process to manage
-- **Dynamic Port** — binds to `127.0.0.1:0` for conflict-free port allocation
-- **Tailwind CSS 4** — styling via `@import "tailwindcss"` in `style/input.css`
-- **Dual-Target App** — the `app` crate supports both Tauri (filesystem storage) and Spin (KV store) via feature flags
+- **Full SSR** — Leptos renders pages server-side within the Tauri process
+- **Server Functions** — `#[server]` functions execute in the same process
+- **Single Binary** — no sidecar, no companion process
+- **Dynamic Port** — binds to `127.0.0.1:0` to avoid port conflicts
+- **Tailwind CSS 4** — via `@import "tailwindcss"` in `style/input.css`
+- **Dual-Target** — the `app` crate supports both Tauri (filesystem) and [Spin](https://developer.fermyon.com/spin) (KV store) via feature flags
 
 ## Prerequisites
 
 - [Rust](https://www.rust-lang.org/tools/install) (stable)
+- [cargo-generate](https://cargo-generate.github.io/cargo-generate/installation.html): `cargo install --locked cargo-generate`
 - [cargo-leptos](https://github.com/leptos-rs/cargo-leptos): `cargo install --locked cargo-leptos`
 - [Tauri CLI](https://v2.tauri.app/start/create-project/): `cargo install tauri-cli`
-- (Optional) [cargo-generate](https://cargo-generate.github.io/cargo-generate/installation.html): `cargo install --locked cargo-generate`
 
 ## Getting Started
 
 ### Generate from Template
 
 ```sh
-# You will be prompted to enter a project name
 cargo generate --git git@github.com:codeitlikemiley/tauri-leptos-ssr
-
-# Or with cargo-leptos
-cargo leptos new --git git@github.com:codeitlikemiley/tauri-leptos-ssr
-```
-
-### Generate Tauri Icons
-
-Without icons you will have issues with `cargo tauri dev` or `cargo tauri build`.
-
-```sh
-cd src-tauri
-cargo tauri icon /path/to/icon.png
 ```
 
 ### Development
@@ -47,7 +34,7 @@ cargo tauri icon /path/to/icon.png
 cargo tauri dev
 ```
 
-This starts `cargo leptos watch` (via `beforeDevCommand`) which runs the standalone `server` binary for hot-reloading, and opens the Tauri WebView pointed at `http://localhost:3000`.
+This runs `cargo leptos watch` (via `beforeDevCommand`) which starts the standalone `server` binary on `:3000` with hot-reload. Tauri opens the WebView at `http://localhost:3000`.
 
 ### Production Build
 
@@ -55,20 +42,20 @@ This starts `cargo leptos watch` (via `beforeDevCommand`) which runs the standal
 cargo tauri build
 ```
 
-This runs `cargo leptos build --release` (via `beforeBuildCommand`), bundles the site assets as Tauri resources, and compiles everything into a single native binary with the Axum SSR server embedded.
+This runs `cargo leptos build --release` (via `beforeBuildCommand`), bundles the site assets as Tauri resources, and compiles everything into a single native binary with the Axum server embedded.
 
 ## Project Structure
 
 ```
-├── app/              # Shared Leptos application (components, routes, server functions)
-│   └── src/lib.rs    # App component, server fns, build_router(), storage abstraction
-├── frontend/         # WASM client target (hydration entry point)
-├── server/           # Standalone Axum server (used in dev mode by cargo-leptos)
-├── src-tauri/        # Tauri desktop wrapper
-│   ├── src/lib.rs    # In-process Axum server setup, lifecycle management
+├── app/              # Shared Leptos app (components, routes, server functions)
+│   └── src/lib.rs    # App component, server fns, build_router()
+├── frontend/         # WASM client entry point (hydration)
+├── server/           # Standalone Axum server (dev mode only)
+├── src-tauri/        # Tauri desktop shell
+│   ├── src/lib.rs    # Embedded Axum server setup + lifecycle
 │   └── tauri.conf.json
 ├── style/            # Tailwind CSS input
-├── public/           # Static assets
+├── public/           # Static assets (favicon, etc.)
 └── Cargo.toml        # Workspace config + cargo-leptos metadata
 ```
 
@@ -76,30 +63,29 @@ This runs `cargo leptos build --release` (via `beforeBuildCommand`), bundles the
 
 ### Dev Mode (`cargo tauri dev`)
 
-1. `beforeDevCommand` runs `cargo leptos watch` → starts the standalone `server` binary on `:3000`
-2. Tauri WebView loads `devUrl: http://localhost:3000`
-3. Hot-reload works via cargo-leptos watch
+1. `beforeDevCommand` runs `cargo leptos watch` → starts the `server` binary on `:3000`
+2. Tauri WebView loads `http://localhost:3000`
+3. File changes trigger hot-reload via cargo-leptos
 
 ### Release Mode (`cargo tauri build`)
 
 1. `beforeBuildCommand` runs `cargo leptos build --release`
-2. Produces `target/site/` with WASM, JS, CSS, and static assets
+2. Produces `target/site/` with WASM, CSS, and static assets
 3. Tauri bundles `target/site/` + `Cargo.toml` as resources
 4. At runtime, `src-tauri/src/lib.rs`:
    - Reads Leptos config from the bundled `Cargo.toml`
-   - Spawns Axum server as a **Tokio task** on `127.0.0.1:0` (OS-assigned port)
+   - Spawns Axum as a Tokio task on `127.0.0.1:0` (OS-assigned port)
    - Waits for the server to become ready
    - Navigates the WebView to `http://127.0.0.1:{port}`
-5. Server functions (`get_count`, `increment_count`) execute in the same process
-6. On window close, the Axum task is gracefully aborted
+5. On window close, the server task is gracefully aborted
 
 ## Feature Flags
 
 | Crate | Feature | Purpose |
 |-------|---------|---------|
-| `app` | `hydrate` | Client-side hydration (compiled to WASM) |
-| `app` | `ssr` | Server-side rendering (compiled to native) |
-| `app` | `spin` | Spin KV storage backend (for Fermyon Cloud) |
+| `app` | `hydrate` | Client-side hydration (WASM) |
+| `app` | `ssr` | Server-side rendering (native) |
+| `app` | `spin` | Spin KV storage backend |
 
 ## Testing
 
@@ -114,21 +100,19 @@ npx playwright install
 ### Run Tests
 
 ```sh
-# During development
 cargo leptos end-to-end
 
-# For release
+# Release mode
 cargo leptos end-to-end --release
 ```
 
-View test report:
 ```sh
-cd end2end
-npx playwright show-report
+# View report
+cd end2end && npx playwright show-report
 ```
 
 For Tauri WebDriver testing, see the [Tauri docs](https://v2.tauri.app/develop/tests/webdriver/).
 
-## Licensing
+## License
 
-This template is released under the MIT License. Replace the LICENSE file with your own if you plan to release publicly.
+MIT

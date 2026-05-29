@@ -30,15 +30,15 @@ The Leptos SSR server has been moved from an external sidecar binary into the Ta
 - **`src-tauri/Cargo.toml`** — Added direct dependencies on `app` (with `ssr` feature), `leptos`, `axum`, and `tokio`. The Tauri binary now compiles the SSR server natively.
 - **`src-tauri/tauri.conf.json`** — Removed `externalBin` configuration. Added `resources` mapping to bundle `target/site/` and `Cargo.toml` into the app bundle.
 - **`src-tauri/capabilities/default.json`** — Stripped down to `core:default` only. Removed `shell:allow-execute`, `shell:allow-spawn`, and `shell:allow-open` permissions.
-- **`build-binaries.sh`** — Simplified to just `cargo leptos build --release` + WASM filename fix. No longer compiles a separate server binary or copies it to a sidecar location.
+- **`beforeBuildCommand`** — Now runs `cargo leptos build --release` directly. No build scripts needed.
 - **`server/src/main.rs`** — Simplified to use `app::build_router()` instead of duplicating router setup.
 - **`README.md`** — Complete rewrite reflecting the new architecture.
-- **`PROJECT.md`** — Updated to document the in-process architecture and completed milestones.
 
 #### Removed
 
 - **`src-tauri/src/sidecar.rs`** — Deleted. The sidecar module that spawned the external server binary via `tauri_plugin_shell::ShellExt` is no longer needed.
-- **Sidecar binary build step** — `build-binaries.sh` no longer compiles `cargo build --release --bin server --target $TARGET` or copies binaries to `src-tauri/binaries/`.
+- **`build-binaries.sh`** — Deleted. The build is now handled by `beforeBuildCommand` in `tauri.conf.json`.
+- **`build-binaries.ps1`** — Deleted. Windows build script no longer needed.
 - **`externalBin` config** — Removed from `tauri.conf.json`.
 - **Shell execution permissions** — Removed from `capabilities/default.json`.
 
