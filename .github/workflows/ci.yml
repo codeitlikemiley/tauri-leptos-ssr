@@ -37,8 +37,11 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
 
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+
       - name: Install cargo-leptos
-        run: cargo install --locked cargo-leptos
+        run: cargo binstall -y cargo-leptos
 
       - name: Create resource dirs for Tauri build script
         run: mkdir -p target/site/pkg
@@ -137,11 +140,11 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
 
-      - name: Install cargo-leptos
-        run: cargo install --locked cargo-leptos
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
 
-      - name: Install Tauri CLI
-        run: cargo install tauri-cli
+      - name: Install cargo-leptos and tauri-cli
+        run: cargo binstall -y cargo-leptos tauri-cli
 
       - name: Build Tauri app
         run: cargo tauri build
