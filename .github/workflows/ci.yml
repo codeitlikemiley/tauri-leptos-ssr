@@ -61,6 +61,8 @@ jobs:
 
       - name: Install cargo-leptos
         run: cargo binstall -y cargo-leptos
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build with cargo-leptos
         run: cargo leptos build --release
@@ -106,11 +108,13 @@ jobs:
       - name: Install cargo-binstall
         uses: cargo-bins/cargo-binstall@main
 
-      - name: Install cargo-leptos
-        run: cargo binstall -y cargo-leptos
+      - name: Install cargo-leptos and tauri-cli
+        run: cargo binstall -y cargo-leptos tauri-cli
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Tauri app
-        run: npx --yes @tauri-apps/cli build
+        run: cargo tauri build
         env:
           TAURI_SIGNING_PRIVATE_KEY: ""
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
