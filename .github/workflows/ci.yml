@@ -106,11 +106,11 @@ jobs:
       - name: Install cargo-binstall
         uses: cargo-bins/cargo-binstall@main
 
-      - name: Install cargo-leptos and tauri-cli
-        run: cargo binstall -y cargo-leptos tauri-cli
+      - name: Install cargo-leptos
+        run: cargo binstall -y cargo-leptos
 
       - name: Build Tauri app
-        run: cargo tauri build
+        run: npx --yes @tauri-apps/cli build
         env:
           TAURI_SIGNING_PRIVATE_KEY: ""
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ""
